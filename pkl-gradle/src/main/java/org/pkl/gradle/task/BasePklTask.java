@@ -44,7 +44,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
-import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 import org.pkl.gradle.utils.PluginUtils;
 
@@ -102,6 +101,14 @@ public abstract class BasePklTask extends DefaultTask {
               return null;
             });
   }
+
+  /**
+   * The working directory for the task, used as the base for relative path resolution. This
+   * replaces direct access to {@code project.getProjectDir()} at execution time to support the
+   * Gradle configuration cache.
+   */
+  @Internal
+  public abstract DirectoryProperty getWorkingDir();
 
   // Exposed as a task input via evalRootDirPath, because we only need to depend
   // on this directory's path and not on its contents.
@@ -174,42 +181,36 @@ public abstract class BasePklTask extends DefaultTask {
 
   protected abstract void doRunTask();
 
-  @LateInit protected CliBaseOptions cachedOptions;
-
   // Must be called during task execution time only.
   @Internal
   protected CliBaseOptions getCliBaseOptions() {
-    if (cachedOptions == null) {
-      cachedOptions =
-          new CliBaseOptions(
-              getSourceModulesAsUris(),
-              patternsFromStrings(getAllowedModules().get()),
-              patternsFromStrings(getAllowedResources().get()),
-              getEnvironmentVariables().get(),
-              getExternalProperties().get(),
-              parseModulePath(),
-              getProject().getProjectDir().toPath(),
-              mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
-              mapAndGetOrNull(getSettingsModule(), PluginUtils::parseModuleNotationToUri),
-              null,
-              getEvalTimeout().getOrNull(),
-              mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
-              getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
-              getNoCache().getOrElse(false),
-              false,
-              false,
-              false,
-              getTestPort().getOrElse(-1),
-              Collections.emptyList(),
-              getHttpProxy().getOrNull(),
-              getHttpNoProxy().getOrElse(List.of()),
-              getHttpRewrites().getOrNull(),
-              Map.of(),
-              Map.of(),
-              null,
-              getPowerAssertions().getOrElse(false));
-    }
-    return cachedOptions;
+    return new CliBaseOptions(
+        getSourceModulesAsUris(),
+        patternsFromStrings(getAllowedModules().get()),
+        patternsFromStrings(getAllowedResources().get()),
+        getEnvironmentVariables().get(),
+        getExternalProperties().get(),
+        parseModulePath(),
+        getWorkingDir().get().getAsFile().toPath(),
+        mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
+        mapAndGetOrNull(getSettingsModule(), PluginUtils::parseModuleNotationToUri),
+        null,
+        getEvalTimeout().getOrNull(),
+        mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+        getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
+        getNoCache().getOrElse(false),
+        false,
+        false,
+        false,
+        getTestPort().getOrElse(-1),
+        Collections.emptyList(),
+        getHttpProxy().getOrNull(),
+        getHttpNoProxy().getOrElse(List.of()),
+        getHttpRewrites().getOrNull(),
+        Map.of(),
+        Map.of(),
+        null,
+        getPowerAssertions().getOrElse(false));
   }
 
   @Internal

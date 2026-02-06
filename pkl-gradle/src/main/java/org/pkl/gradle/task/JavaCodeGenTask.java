@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
     new CliJavaCodeGenerator(
             new CliJavaCodeGeneratorOptions(
                 getCliBaseOptions(),
-                getProject().file(getOutputDir()).toPath(),
+                getOutputDir().get().getAsFile().toPath(),
                 getIndent().get(),
                 getAddGeneratedAnnotation().get(),
                 getGenerateGetters().get(),

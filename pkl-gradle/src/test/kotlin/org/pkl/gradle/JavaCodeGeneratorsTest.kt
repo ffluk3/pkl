@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,6 +82,28 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     assertThat(moduleClassFile).exists()
     assertThat(personClassFile).exists()
     assertThat(addressClassFile).exists()
+  }
+
+  @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile()
+    writePklFile()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("configClasses")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
+
+    val generatedModuleFile = testProjectDir.resolve("build/generated/java/foo/bar/Mod.java")
+    assertThat(generatedModuleFile).exists()
+    checkTextContains(
+      generatedModuleFile.readText(),
+      "package foo.bar;",
+      "public final class Mod {",
+      "public final @Nonnull Object other;",
+      "public static final class Person {",
+      "public final @Nonnull String name;",
+    )
   }
 
   @Test

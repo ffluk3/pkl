@@ -16,9 +16,6 @@
 package org.pkl.gradle.task;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
@@ -27,7 +24,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.pkl.cli.CliImportAnalyzer;
 import org.pkl.cli.CliImportAnalyzerOptions;
-import org.pkl.core.ImportGraph;
 
 @CacheableTask
 public abstract class AnalyzeImportsTask extends ModulesTask {
@@ -61,22 +57,4 @@ public abstract class AnalyzeImportsTask extends ModulesTask {
    * @param outputFile the output file produced by this task
    * @return the list of file-based transitive import paths
    */
-  @SuppressWarnings("unused") // called as a method reference in PklPlugin
-  public static List<File> parseTransitiveFiles(RegularFile outputFile) {
-    if (!outputFile.getAsFile().exists()) {
-      return Collections.emptyList();
-    }
-    try {
-      var contents = java.nio.file.Files.readString(outputFile.getAsFile().toPath());
-      ImportGraph importGraph = ImportGraph.parseFromJson(contents);
-      var imports = importGraph.resolvedImports().values();
-      return imports.stream()
-          .filter(it -> it.getScheme().equalsIgnoreCase("file"))
-          .map(File::new)
-          .toList();
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "Failed to parse transitive imports from " + outputFile.getAsFile(), e);
-    }
-  }
 }

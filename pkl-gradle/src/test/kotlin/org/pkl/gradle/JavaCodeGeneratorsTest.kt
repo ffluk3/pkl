@@ -129,6 +129,53 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     assertThat(result.output).contains("No source modules specified.")
   }
 
+  @Test
+  fun `source set configured after pkl block`() {
+    writeFile(
+      "build.gradle",
+      """
+      plugins {
+        id "java"
+        id "org.pkl-lang"
+      }
+
+      sourceSets {
+        integTest {}
+      }
+
+      repositories {
+        mavenCentral()
+      }
+
+      dependencies {
+        integTestImplementation "javax.inject:javax.inject:1"
+        integTestImplementation "com.google.code.findbugs:jsr305:3.0.2"
+      }
+
+      pkl {
+        javaCodeGenerators {
+          configClasses {
+            sourceModules = ["mod.pkl"]
+            outputDir = file("build/generated")
+            paramsAnnotation = "javax.inject.Named"
+            nonNullAnnotation = "javax.annotation.Nonnull"
+            settingsModule = "pkl:settings"
+            renames = ['org': 'foo.bar']
+          }
+        }
+      }
+
+      pkl.javaCodeGenerators.configClasses.sourceSet = sourceSets.integTest
+      """,
+    )
+    writePklFile()
+
+    runTask("compileIntegTestJava")
+
+    val classesDir = testProjectDir.resolve("build/classes/java/integTest")
+    assertThat(classesDir.resolve("foo/bar/Mod.class")).exists()
+  }
+
   private fun writeBuildFile() {
     writeFile(
       "build.gradle",

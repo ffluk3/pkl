@@ -206,11 +206,16 @@ public class PklPlugin implements Plugin<Project> {
                     task.getParamsAnnotation().set(spec.getParamsAnnotation());
                     task.getNonNullAnnotation().set(spec.getNonNullAnnotation());
                   });
-
-          configureIdeaModule(project, spec);
-          configureCodeGenSpecSourceDirectories(
-              project, spec, "java", s -> Optional.of(s.getJava()));
         });
+
+    project.afterEvaluate(
+        prj ->
+            specs.all(
+                spec -> {
+                  configureIdeaModule(project, spec);
+                  configureCodeGenSpecSourceDirectories(
+                      project, spec, "java", s -> Optional.of(s.getJava()));
+                }));
   }
 
   private void configureKotlinCodeGenTasks(
@@ -228,11 +233,16 @@ public class PklPlugin implements Plugin<Project> {
                     configureCodeGenTask(task, spec);
                     task.getGenerateKdoc().set(spec.getGenerateKdoc());
                   });
-
-          configureIdeaModule(project, spec);
-          configureCodeGenSpecSourceDirectories(
-              project, spec, "kotlin", this::getKotlinSourceDirectorySet);
         });
+
+    project.afterEvaluate(
+        prj ->
+            specs.all(
+                spec -> {
+                  configureIdeaModule(project, spec);
+                  configureCodeGenSpecSourceDirectories(
+                      project, spec, "kotlin", this::getKotlinSourceDirectorySet);
+                }));
   }
 
   private void configurePkldocTasks(Project project, NamedDomainObjectContainer<PkldocSpec> specs) {
@@ -481,16 +491,16 @@ public class PklPlugin implements Plugin<Project> {
     task.getProjectDir().set(spec.getProjectDir());
     task.getOmitProjectSettings().set(spec.getOmitProjectSettings());
     if (!spec.getTransitiveModules().isEmpty()) {
-      task.getTransitiveModules().from(spec.getTransitiveModules());
+      task.getTransitiveModules().set(spec.getTransitiveModules());
     } else if (analyzeImportsTask != null) {
       task.dependsOn(analyzeImportsTask);
       // Map the output file provider to the list of transitive files
       // This avoids capturing the task reference directly, making it configuration-cache-safe
       task.getTransitiveModules()
-          .from(
+          .set(
               analyzeImportsTask
                   .flatMap(AnalyzeImportsTask::getOutputFile)
-                  .map(AnalyzeImportsTask::parseTransitiveFiles));
+                  .map(PluginUtils::parseTransitiveFiles));
     }
   }
 

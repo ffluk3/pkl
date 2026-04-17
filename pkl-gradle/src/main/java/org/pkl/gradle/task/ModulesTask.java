@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -54,8 +53,7 @@ public abstract class ModulesTask extends BasePklTask {
 
   @InputFiles
   @PathSensitive(PathSensitivity.ABSOLUTE)
-  @Optional
-  public abstract ConfigurableFileCollection getTransitiveModules();
+  public abstract ListProperty<File> getTransitiveModules();
 
   // Used for input tracking purposes only.
   @Internal
